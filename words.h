@@ -7,10 +7,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define NMAX 1000
+#define NMAX 500
+#define FILEMAX 30
+#define DIM 100
 
-typedef struct
-{
+typedef struct {
 	char **words;
 	int number, total;
 } keywords;

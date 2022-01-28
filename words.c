@@ -13,7 +13,7 @@ void compute_dictionary(keywords *dict)
 		exit(-1);
 	}
 
-	fscanf(in, "%d", &(dict->number));
+	fscanf(in, "%d", &dict->number);
 	dict->total = dict->number;
 	dict->words = (char **)malloc(dict->number * sizeof(char *));
 	if (!dict->words) {
@@ -46,8 +46,8 @@ void compute_dictionary(keywords *dict)
 		free_dictionary(dict);
 		exit(-1);
 	}
-
 	dict->words = aux;
+
 	for (int i = dict->number; i < dict->total; ++i) {
 		fscanf(in, "%s", s);
 		dict->words[i] = (char *)malloc((strlen(s) + 1) * sizeof(char));

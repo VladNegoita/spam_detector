@@ -13,10 +13,11 @@
 #define NMAX 500
 #define FILEMAX 30
 #define DIM 100
+#define LIMIT 35
 
 typedef struct {
 	int *keywords;
-	int body_size;
+	int body, caps;
 	double spam_value;
 	char *from;
 } email;
@@ -27,5 +28,9 @@ void free_emails(email *v, int n);
 int occurences(char *line, char *pattern);
 void lower(char *s);
 void predict(email *v, int n, keywords dict);
+int caps_number(char *s);
+void criteria1(email *v, int n);
+void criteria2(email *v, int n);
+void criteria3(email *v, int n, keywords dict);
 
 #endif

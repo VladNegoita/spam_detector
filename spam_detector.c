@@ -58,11 +58,16 @@ void read_email(FILE *in, int email_number, email *v, keywords dict)
 	fgets(s, NMAX, in);// subject
 
 	fgets(s, NMAX, in);// from
+	v[email_number].from = (char *)malloc((strlen(s) + 1) * sizeof(char));
+	strcpy(v[email_number].from, s);
 
 	fgets(s, NMAX, in);//empty line
 
+	v[email_number].body = 0;
+	v[email_number].caps = 0;
 	while (fgets(s, NMAX, in)) {// body
-		v[email_number].body_size += strlen(s);
+		v[email_number].body += strlen(s);
+		v[email_number].caps += caps_number(s);
 		strcpy(aux1, s);
 		lower(aux1);
 		for (int i = 0; i < dict.total; ++i) {
@@ -75,8 +80,10 @@ void read_email(FILE *in, int email_number, email *v, keywords dict)
 
 void free_emails(email *v, int n)
 {
-	for (int i = 0; i < n; ++i)
+	for (int i = 0; i < n; ++i) {
 		free(v[i].keywords);
+		free(v[i].from);
+	}
 	free(v);
 }
 
@@ -116,7 +123,85 @@ void lower(char *s)
 			s[i] += ('a' - 'A');
 }
 
+int caps_number(char *s)
+{
+	int cnt = 0;
+	for (int i = 0; i < (int)strlen(s); ++i)
+		if (s[i] >= 'A' && s[i] <= 'Z')
+			++cnt;
+	return cnt;
+}
+
 void predict(email *v, int n, keywords dict)
 {
+	criteria1(v, n);
+	criteria2(v, n);
+	criteria3(v, n, dict);
 
+	FILE *out = fopen("prediction.out", "wt");
+	for (int i = 0; i < n; ++i) {
+		if (v[i].spam_value > LIMIT)
+			fprintf(out, "%d\n", 1);
+		else
+			fprintf(out, "%d\n", 0);
+	}
+	fclose(out);
+}
+
+void criteria1(email *v, int n)
+{
+	for (int i = 0; i < n; ++i) {
+		if (2 * v[i].caps > v[i].body / 2)
+			v[i].spam_value = 30.0;
+		else
+			v[i].spam_value = 0.0;
+	}
+}
+
+void criteria2(email *v, int n)
+{
+	FILE *in = fopen("./data/spammers", "rt");
+	if (!in) {
+		fprintf(stderr, "spammers list missing");
+		exit(-1);
+	}
+
+	int known_spammers, *values;
+	char s[NMAX + 1], **a;
+	fscanf(in, "%d", &known_spammers);
+	a = (char **)malloc(known_spammers * sizeof(char *));
+	values = (int *)malloc(known_spammers * sizeof(int));
+
+	for (int i = 0; i < known_spammers; ++i) {
+		fscanf(in, "%s %d", s, values + i);
+		a[i] = (char *)malloc((strlen(s) + 1) * sizeof(char));
+		strcpy(a[i], s);
+	}
+
+	fclose(in);
+
+	for (int i = 0; i < n; ++i)
+		for (int j = 0; j < known_spammers; ++j)
+			if (strstr(v[i].from, a[j]))
+				v[i].spam_value += values[j];
+
+	for (int i = 0; i < known_spammers; ++i)
+		free(a[i]);
+	free(a);
+	free(values);
+}
+
+void criteria3(email *v, int n, keywords dict)
+{
+	double avg_body = 0.0;
+	for (int i = 0; i < n; ++i)
+		avg_body += v[i].body;
+	avg_body /= n;
+
+	for (int i = 0; i < n; ++i) {
+		int word_count = 0;
+		for (int j = 0; j < dict.total; ++j)
+			word_count += v[i].keywords[j];
+		v[i].spam_value += 10 * (avg_body / v[i].body) * word_count;
+	}
 }

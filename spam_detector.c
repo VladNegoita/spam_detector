@@ -61,8 +61,6 @@ void read_email(FILE *in, int email_number, email *v, keywords dict)
 	v[email_number].from = (char *)malloc((strlen(s) + 1) * sizeof(char));
 	strcpy(v[email_number].from, s);
 
-	fgets(s, NMAX, in);//empty line
-
 	v[email_number].body = 0;
 	v[email_number].caps = 0;
 	while (fgets(s, NMAX, in)) {// body

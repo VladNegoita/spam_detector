@@ -186,7 +186,7 @@ int letter_number(char *s)
 int count_invalids(char *s)
 {
 	int cnt = 0;
-	char *p, sep[20] = "\n .,!?;:\"\'()";
+	char *p, sep[20] = "\n .,!?;:\"\'()*";
 	p = strtok(s, sep);
 	while (p) {
 		cnt += is_invalid(p);
@@ -237,6 +237,7 @@ void predict(email *v, int n, keywords dict)
 		else
 			fprintf(out, "%d\n", 0);
 	}
+	printf("%lf\n", v[2].spam_value);
 	fclose(out);
 }
 
@@ -293,7 +294,7 @@ void criteria3(email *v, int n, keywords dict)// keywords
 		int word_count = 0;
 		for (int j = 0; j < dict.total; ++j)
 			word_count += v[i].keywords[j];
-		v[i].spam_value += 8.0 * (avg_body / v[i].body) * word_count;
+		v[i].spam_value += 7.5 * (avg_body / v[i].body) * word_count;
 	}
 }
 
@@ -333,8 +334,8 @@ void criteria5(email *v, int n)// invalid words
 	avg_body /= n;
 
 	for (int i = 0; i < n; ++i) {
-		double aux = (double)max(v[i].invalid_words - 5, 0) / 4.0;
-		aux = aux * (avg_body / v[i].body);
+		double aux = (double)max(v[i].invalid_words - 10, 0);
+		aux = (aux * (avg_body / v[i].body)) / 5.0;
 		v[i].spam_value += aux;
 	}
 }

@@ -13,7 +13,7 @@
 #define NMAX 50000
 #define FILEMAX 30
 #define DIM 100
-#define LIMIT 36
+#define LIMIT 35
 
 typedef struct {
 	int *keywords;

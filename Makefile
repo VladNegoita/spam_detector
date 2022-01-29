@@ -13,7 +13,7 @@ spam_detector: spam_detector.c words.c
 	$(CC) $(CFLAGS) spam_detector.c words.c -lm -o spam_detector
 
 pack:
-	zip -FSr 311CA_VladNegoita_Tema4.zip README Makefile *.c *.h
+	zip -FSr 311CA_VladNegoita_Tema4.zip README Makefile additional_keywords *.c *.h
 
 clean:
 	rm -f $(TARGETS)

@@ -10,14 +10,14 @@
 #include <dirent.h>
 #include "words.h"
 
-#define NMAX 500
+#define NMAX 5000
 #define FILEMAX 30
 #define DIM 100
-#define LIMIT 35
+#define LIMIT 36
 
 typedef struct {
 	int *keywords;
-	int body, caps;
+	int body, caps, invalid_words;
 	double spam_value;
 	char *from;
 } email;
@@ -32,5 +32,14 @@ int caps_number(char *s);
 void criteria1(email *v, int n);
 void criteria2(email *v, int n);
 void criteria3(email *v, int n, keywords dict);
+void criteria4(email *v, int n);
+void criteria5(email *v, int n);
+int count_invalids(char *s);
+int is_invalid(char *s);
+int is_lower(char c);
+int is_upper(char c);
+int is_digit(char c);
+int is_vowel(char c);
+int is_letter(char c);
 
 #endif

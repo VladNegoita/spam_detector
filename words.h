@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define NMAX 5000
+#define NMAX 50000
 
 typedef struct {
 	char **words;

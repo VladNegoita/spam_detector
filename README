@@ -1,4 +1,63 @@
+# Spam_detector - C language
+
+## Step I: Presenting the structures
+
+
+	For this program, there were used used two structures: email and keywords.
+
+
+	###### Firstly, the email structure has the following members:
+
+		-keywords -> a list with the number of occurences of each suspicious
+					 word in the provided and added files;
+
+		-body -> the length of a body;
+
+		-caps -> the number of caps letters in the mail;
+
+		-letters -> the number of letters in the mail;
+
+		-invalid_words -> used for counting the occurences of weird
+						  combinations of characters such as:
+
+						  	-uppercase letter after lowercase letter;
+
+						  	-three identical letters in a row;
+
+						  	-5 consonants in a row -> cannot be pronounced;
+
+						  	- links (http identifier);
+
+		-from -> a string with the sender and his address;
+
+
+	###### Secondly, the keywords structure is very simillar to a dictionary:
+
+		-words -> a list of strings;
+
+		-number -> the number of the provided keywords;
+
+		-total -> the total number of the identifiable spam-related words.
+
+
+## Step II: The criteria used
+
+
+	1. uppercase -> accords a spam_score based on the percentage of caps
+					letters
+
+	2. spammers -> accords a spam_score based on an already known list
+				   of spammers
+
+	3. keywords -> calculate a specific spam_score based on the dictionary
+
+	4. body_length -> using basic statistics (2 * sigma range around the mean)
+					  will contain around 95% of the emails. The rest are the
+					  ones with very long or very short body.
+
+				   -> accords some spam_points for the unusual bodies
+
+	5. invalid_words -> calculate a proportional score using the number of
+						invalid words and the body-length and body-average
+
 # Copyright 2022 311CA Vlad Negoita <vlad1negoita@gmail.com>
-
-Spam_detector - C language
-

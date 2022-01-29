@@ -65,10 +65,12 @@ void read_email(FILE *in, int email_number, email *v, keywords dict)
 
 	v[email_number].body = 0;
 	v[email_number].caps = 0;
+	v[email_number].letters = 0;
 	v[email_number].invalid_words = 0;
 	while (fgets(s, NMAX, in)) {// body
 		v[email_number].body += strlen(s);
 		v[email_number].caps += caps_number(s);
+		v[email_number].letters += letter_number(s);
 		strcpy(aux2, s);
 		v[email_number].invalid_words += count_invalids(aux2);
 		strcpy(aux1, s);
@@ -172,14 +174,23 @@ int caps_number(char *s)
 	return cnt;
 }
 
+int letter_number(char *s)
+{
+	int cnt = 0;
+	for (int i = 0; i < (int)strlen(s); ++i)
+		if (is_letter(s[i]))
+			++cnt;
+	return cnt;
+}
+
 int count_invalids(char *s)
 {
 	int cnt = 0;
-	char *p;
-	p = strtok(s, "\n ");
+	char *p, sep[20] = "\n .,!?;:\"\'()";
+	p = strtok(s, sep);
 	while (p) {
 		cnt += is_invalid(p);
-		p = strtok(NULL, "\n ");
+		p = strtok(NULL, sep);
 	}
 	return cnt;
 }
@@ -187,19 +198,25 @@ int count_invalids(char *s)
 int is_invalid(char *s)
 {
 	if (strstr(s, "http"))
-		return 0;
+		return 1;
 
 	for (int i = 0; i < (int)strlen(s); ++i) {
-		if (is_letter(s[i])) {
-			if (i > 0 && is_lower(s[i - 1]) && is_upper(s[i]))//aA
-				return 1;
-			if (i > 1 && s[i - 2] == s[i - 1] && s[i - 1] == s[i])///aaa
-				return 1;
-			if (i > 3 && !is_vowel(s[i]) && !is_vowel(s[i - 1]))///fsrds
-				if (!is_vowel(s[i - 2]) && !is_vowel(s[i - 3]))
-					if (!is_vowel(s[i - 4]))
-						return 1;
-		}
+		if (i > 0 && is_lower(s[i - 1]) && is_upper(s[i]))//aA
+			return 1;
+
+		if (i > 1 && s[i - 2] == s[i - 1] && s[i - 1] == s[i])///aaa
+			return 1;
+
+		if (i > 3 && !is_vowel(s[i]) && !is_vowel(s[i - 1]))///fsrds
+			if (!is_vowel(s[i - 2]) && !is_vowel(s[i - 3]))
+				if (!is_vowel(s[i - 4]))
+					return 1;
+
+		if (i > 0 && is_letter(s[i - 1]) && !is_letter(s[i]))
+			return 1;
+
+		if (i > 0 && !is_letter(s[i - 1]) && is_letter(s[i]))
+			return 1;
 	}
 	return 0;
 }
@@ -214,6 +231,7 @@ void predict(email *v, int n, keywords dict)
 
 	FILE *out = fopen("prediction.out", "wt");
 	for (int i = 0; i < n; ++i) {
+		printf("%lf\n", v[i].spam_value);
 		if (v[i].spam_value > LIMIT)
 			fprintf(out, "%d\n", 1);
 		else
@@ -222,17 +240,16 @@ void predict(email *v, int n, keywords dict)
 	fclose(out);
 }
 
-void criteria1(email *v, int n)
+void criteria1(email *v, int n)// uppercase
 {
-	for (int i = 0; i < n; ++i) {
-		if (2 * v[i].caps > v[i].body / 2)
+	for (int i = 0; i < n; ++i)
+		if (v[i].caps > v[i].letters / 2)
 			v[i].spam_value = 30.0;
 		else
-			v[i].spam_value = 0.0;
-	}
+			v[i].spam_value = 50 * (v[i].caps / v[i].letters);
 }
 
-void criteria2(email *v, int n)
+void criteria2(email *v, int n)// spammers
 {
 	FILE *in = fopen("./data/spammers", "rt");
 	if (!in) {
@@ -265,7 +282,7 @@ void criteria2(email *v, int n)
 	free(values);
 }
 
-void criteria3(email *v, int n, keywords dict)
+void criteria3(email *v, int n, keywords dict)// keywords
 {
 	double avg_body = 0.0;
 	for (int i = 0; i < n; ++i)
@@ -276,11 +293,11 @@ void criteria3(email *v, int n, keywords dict)
 		int word_count = 0;
 		for (int j = 0; j < dict.total; ++j)
 			word_count += v[i].keywords[j];
-		v[i].spam_value += 10 * (avg_body / v[i].body) * word_count;
+		v[i].spam_value += 8.0 * (avg_body / v[i].body) * word_count;
 	}
 }
 
-void criteria4(email *v, int n)
+void criteria4(email *v, int n)// body_length
 {
 	double avg_body = 0.0;
 	for (int i = 0; i < n; ++i)
@@ -308,8 +325,16 @@ int max(int a, int b)
 	return b;
 }
 
-void criteria5(email *v, int n)
+void criteria5(email *v, int n)// invalid words
 {
+	double avg_body = 0.0;
 	for (int i = 0; i < n; ++i)
-		v[i].spam_value += (double)max(v[i].invalid_words - 3, 0) / 2;
+		avg_body += v[i].body;
+	avg_body /= n;
+
+	for (int i = 0; i < n; ++i) {
+		double aux = (double)max(v[i].invalid_words - 5, 0) / 4.0;
+		aux = aux * (avg_body / v[i].body);
+		v[i].spam_value += aux;
+	}
 }
